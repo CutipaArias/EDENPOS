@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EdenPOS: antes y después</title>
+<style>
+  :root { --bg:#f6f8f7; --card:#fff; --ink:#1b2620; --muted:#5e6b64; --line:#dde4e0; --brand:#167f36; --soft:#e7f4eb; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#121815; --card:#1a221e; --ink:#e7eee9; --muted:#9fb0a6; --line:#2b3731; --brand:#4cc072; --soft:#1f3328; } }
+  :root[data-theme="dark"] { --bg:#121815; --card:#1a221e; --ink:#e7eee9; --muted:#9fb0a6; --line:#2b3731; --brand:#4cc072; --soft:#1f3328; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 "Segoe UI", system-ui, sans-serif; }
+  header { position:sticky; top:0; z-index:2; background:var(--card); border-bottom:1px solid var(--line); padding:16px 24px; }
+  h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:-0.01em; }
+  header p { margin:2px 0 10px; color:var(--muted); }
+  nav { display:flex; flex-wrap:wrap; gap:6px; }
+  nav button { border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:999px; padding:5px 12px; font:inherit; font-size:13px; cursor:pointer; }
+  nav button[aria-pressed="true"] { background:var(--soft); border-color:var(--brand); color:var(--brand); font-weight:600; }
+  main { padding:16px 24px 48px; max-width:1800px; margin:0 auto; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin:16px 0; }
+  h2 { margin:0 0 4px; font-size:17px; font-weight:600; }
+  .note { margin:0 0 12px; color:var(--muted); font-size:13px; }
+  .pair { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+  .pair.single { grid-template-columns:1fr; max-width:900px; }
+  figure { margin:0; }
+  figcaption { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); margin-bottom:6px; }
+  figcaption.new { color:var(--brand); }
+  img { width:100%; height:auto; border:1px solid var(--line); border-radius:8px; background:#fff; cursor:zoom-in; display:block; }
+  .missing { border:1px dashed var(--line); border-radius:8px; padding:32px; text-align:center; color:var(--muted); font-size:13px; }
+  dialog { border:none; padding:0; background:transparent; max-width:96vw; max-height:96vh; }
+  dialog::backdrop { background:rgba(0,0,0,.7); }
+  dialog img { max-width:96vw; max-height:96vh; width:auto; cursor:zoom-out; }
+  @media (max-width:800px) { .pair { grid-template-columns:1fr; } header, main { padding-left:16px; padding-right:16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>EdenPOS: antes y después del rediseño</h1>
+  <p>Capturas generadas con datos de prueba. Haga clic en una imagen para verla en grande.</p>
+  <nav id="filters"></nav>
+</header>
+<main id="list"></main>
+<dialog id="zoom"><img alt=""></dialog>
+<script>
+const items = [
+  ["Inicio", "Inicio de sesión", "01-login.png"],
+  ["Dueña", "Inventario (1366×768)", "02-duena-inventario-1366x768.png"],
+  ["Dueña", "Inventario (1920×1080)", "02-duena-inventario-1920x1080.png"],
+  ["Dueña", "Reportes · Caja", "03-duena-reportes-caja.png"],
+  ["Dueña", "Reportes · Ventas", "03-duena-reportes-ventas.png"],
+  ["Dueña", "Reportes · Inventario", "03-duena-reportes-inventario.png"],
+  ["Dueña", "Auditoría", "04-duena-auditoria.png"],
+  ["Configuración", "Configuración (antes: columna única) · Negocio", "05-duena-configuracion-negocio.png", "05-duena-configuracion-arriba.png"],
+  ["Configuración", "Configuración · Usuarios", "05-duena-configuracion-usuarios.png", null],
+  ["Configuración", "Configuración · Promociones", "05-duena-configuracion-promociones.png"],
+  ["Configuración", "Configuración · Facturación electrónica (simulada)", "05-duena-configuracion-facturacion.png"],
+  ["Configuración", "Configuración · Consulta de DNI", "05-duena-configuracion-dni.png", null],
+  ["Configuración", "Configuración · Copias de seguridad y datos", "05-duena-configuracion-copias.png", null],
+  ["Trabajador", "Ventas con carrito (1366×768)", "06-trabajador-ventas-carrito-1366x768.png"],
+  ["Trabajador", "Ventas con carrito (1920×1080)", "06-trabajador-ventas-carrito-1920x1080.png"],
+  ["Trabajador", "Ventas, ticket vacío", "06-trabajador-ventas-vacio.png"],
+  ["Trabajador", "Recibos", "07-trabajador-recibos.png"],
+  ["Trabajador", "Turno", "08-trabajador-turno.png"],
+  ["Diálogos", "Cobro sin promoción", "10-dialogo-cobro-sin-promo.png"],
+  ["Diálogos", "Cobro con promoción", "10-dialogo-cobro-con-promo.png"],
+  ["Diálogos", "Venta completada", "11-dialogo-venta-completada.png"],
+  ["Diálogos", "Guardar ticket", "12-dialogo-guardar-ticket.png"],
+  ["Diálogos", "Candados", "13-dialogo-casilleros.png"],
+  ["Diálogos", "Tickets guardados", "14-dialogo-tickets-guardados.png"],
+  ["Diálogos", "Resumen de cobros", "15-dialogo-resumen-cobros.png"],
+  ["Diálogos", "Recordatorio de alquiler", "16-dialogo-recordatorio-alquiler.png"],
+  ["Diálogos", "Registrar movimiento de caja", "17-dialogo-tesoreria.png"],
+  ["Diálogos", "Nuevo artículo", "20-dialogo-producto-nuevo.png"],
+  ["Diálogos", "Editar artículo", "20-dialogo-producto-editar.png"],
+  ["Diálogos", "Entrada de inventario", "21-dialogo-entrada-inventario.png"],
+  ["Diálogos", "Nueva variante", "22-dialogo-variante-nueva.png"],
+  ["Diálogos", "Elegir variante", "23-dialogo-elegir-variante.png"],
+  ["Diálogos", "Nuevo usuario", "24-dialogo-usuario-nuevo.png"],
+  ["Diálogos", "Editar usuario", "24-dialogo-usuario-editar.png"],
+  ["Sistema de diseño", "Galería de componentes (botones, campos, tablas, etiquetas, avisos)", "00-galeria-diseno.png", null],
+];
+const groups = ["Todas", ...new Set(items.map(i => i[0]))];
+const filters = document.getElementById("filters"), list = document.getElementById("list");
+let current = "Todas";
+try { current = localStorage.getItem("eden-filter") || "Todas"; } catch (e) {}
+if (!groups.includes(current)) current = "Todas";
+
+function fig(label, src, isNew) {
+  const f = document.createElement("figure");
+  const c = document.createElement("figcaption");
+  c.textContent = label; if (isNew) c.className = "new";
+  f.appendChild(c);
+  if (!src) { const m = document.createElement("div"); m.className = "missing"; m.textContent = "No existía en el diseño anterior"; f.appendChild(m); return f; }
+  const img = document.createElement("img");
+  img.src = src; img.alt = label; img.loading = "lazy";
+  img.addEventListener("click", () => { const d = document.getElementById("zoom"); d.querySelector("img").src = src; d.showModal(); });
+  f.appendChild(img); return f;
+}
+function render() {
+  filters.innerHTML = "";
+  groups.forEach(g => {
+    const b = document.createElement("button"); b.textContent = g;
+    b.setAttribute("aria-pressed", g === current);
+    b.onclick = () => { current = g; try { localStorage.setItem("eden-filter", g); } catch (e) {} render(); };
+    filters.appendChild(b);
+  });
+  list.innerHTML = "";
+  items.filter(i => current === "Todas" || i[0] === current).forEach(([g, title, after, beforeOverride]) => {
+    const s = document.createElement("section");
+    const h = document.createElement("h2"); h.textContent = title; s.appendChild(h);
+    const before = beforeOverride === undefined ? after : beforeOverride;
+    const pair = document.createElement("div"); pair.className = "pair" + (g === "Sistema de diseño" ? " single" : "");
+    if (g !== "Sistema de diseño") pair.appendChild(fig("Antes", before ? "antes/" + before : null, false));
+    pair.appendChild(fig("Después", "final/" + after, true));
+    s.appendChild(pair); list.appendChild(s);
+  });
+}
+document.getElementById("zoom").addEventListener("click", e => e.currentTarget.close());
+render();
+</script>
+</body>
+</html>

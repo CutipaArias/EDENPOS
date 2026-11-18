@@ -1,0 +1,27 @@
+# Compilación y Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# Ejecutable antiguo (se regenera con dotnet build)
+Ejecutable/
+
+# Datos reales del negocio (clientes con DNI, recibos): nunca al repositorio
+Base de datos/
+BaseDatos/
+
+# Base MySQL de pruebas local
+devdb/data/
+
+# Configuración y secretos locales
+settings.json
+*.protected
+supabase-replica.state.json
+errors.log
+*.edenbackup
+.env
+
+# Configuración local de Claude Code
+.claude/settings.local.json
